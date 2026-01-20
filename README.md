@@ -6,7 +6,7 @@
 
 **High Performance DNS Tunnel with Compression & Parallel Queries**
 
-[![Release](https://img.shields.io/github/v/release/persiansmallcoder/dnstt-fast?style=flat-square)](https://github.com/persiansmallcoder/dnstt-fast/releases)
+[![Release](https://img.shields.io/github/v/release/mohjaf67/dnstt-fast-tunnel?style=flat-square)](https://github.com/mohjaf67/dnstt-fast-tunnel/releases)
 [![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
 
 > Forked from [dnstt](https://www.bamsoftware.com/git/dnstt.git) by David Fifield
@@ -56,7 +56,7 @@ NS    t.example.com      tns.example.com
 ### 2. Server Installation
 
 ```bash
-curl -sLO https://raw.githubusercontent.com/persiansmallcoder/dnstt-fast/main/dnstt-deploy.sh && sudo bash dnstt-deploy.sh
+curl -sLO https://raw.githubusercontent.com/mohjaf67/dnstt-fast-tunnel/main/dnstt-deploy.sh && sudo bash dnstt-deploy.sh
 ```
 
 ### 3. Client Setup
@@ -65,11 +65,11 @@ Download the client for your platform:
 
 ```bash
 # Linux x64
-curl -sLO https://github.com/persiansmallcoder/dnstt-fast/releases/latest/download/dnstt-client-linux-amd64
+curl -sLO https://github.com/mohjaf67/dnstt-fast-tunnel/releases/latest/download/dnstt-client-linux-amd64
 chmod +x dnstt-client-linux-amd64
 
 # macOS Apple Silicon
-curl -sLO https://github.com/persiansmallcoder/dnstt-fast/releases/latest/download/dnstt-client-darwin-arm64
+curl -sLO https://github.com/mohjaf67/dnstt-fast-tunnel/releases/latest/download/dnstt-client-darwin-arm64
 chmod +x dnstt-client-darwin-arm64
 ```
 
@@ -87,13 +87,13 @@ chmod +x dnstt-client-darwin-arm64
 ### One-liner Install
 
 ```bash
-curl -sLO https://raw.githubusercontent.com/persiansmallcoder/dnstt-fast/main/dnstt-deploy.sh && sudo bash dnstt-deploy.sh
+curl -sLO https://raw.githubusercontent.com/mohjaf67/dnstt-fast-tunnel/main/dnstt-deploy.sh && sudo bash dnstt-deploy.sh
 ```
 
 ### Manual Install
 
 ```bash
-curl -sLO https://raw.githubusercontent.com/persiansmallcoder/dnstt-fast/main/dnstt-deploy.sh
+curl -sLO https://raw.githubusercontent.com/mohjaf67/dnstt-fast-tunnel/main/dnstt-deploy.sh
 chmod +x dnstt-deploy.sh
 sudo ./dnstt-deploy.sh
 ```
@@ -137,11 +137,11 @@ After installation, run `dnstt-deploy` from anywhere:
 
 | Platform | Download |
 |----------|----------|
-| Linux x64 | [`dnstt-client-linux-amd64`](https://github.com/persiansmallcoder/dnstt-fast/releases/latest/download/dnstt-client-linux-amd64) |
-| Linux ARM64 | [`dnstt-client-linux-arm64`](https://github.com/persiansmallcoder/dnstt-fast/releases/latest/download/dnstt-client-linux-arm64) |
-| macOS Intel | [`dnstt-client-darwin-amd64`](https://github.com/persiansmallcoder/dnstt-fast/releases/latest/download/dnstt-client-darwin-amd64) |
-| macOS Apple Silicon | [`dnstt-client-darwin-arm64`](https://github.com/persiansmallcoder/dnstt-fast/releases/latest/download/dnstt-client-darwin-arm64) |
-| Windows x64 | [`dnstt-client-windows-amd64.exe`](https://github.com/persiansmallcoder/dnstt-fast/releases/latest/download/dnstt-client-windows-amd64.exe) |
+| Linux x64 | [`dnstt-client-linux-amd64`](https://github.com/mohjaf67/dnstt-fast-tunnel/releases/latest/download/dnstt-client-linux-amd64) |
+| Linux ARM64 | [`dnstt-client-linux-arm64`](https://github.com/mohjaf67/dnstt-fast-tunnel/releases/latest/download/dnstt-client-linux-arm64) |
+| macOS Intel | [`dnstt-client-darwin-amd64`](https://github.com/mohjaf67/dnstt-fast-tunnel/releases/latest/download/dnstt-client-darwin-amd64) |
+| macOS Apple Silicon | [`dnstt-client-darwin-arm64`](https://github.com/mohjaf67/dnstt-fast-tunnel/releases/latest/download/dnstt-client-darwin-arm64) |
+| Windows x64 | [`dnstt-client-windows-amd64.exe`](https://github.com/mohjaf67/dnstt-fast-tunnel/releases/latest/download/dnstt-client-windows-amd64.exe) |
 | Android | Coming soon |
 
 ### Examples

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # dnstt-fast Server Setup Script
-# https://github.com/persiansmallcoder/dnstt-fast
+# https://github.com/mohjaf67/dnstt-fast-tunnel
 
 # Reopen stdin from terminal (needed for curl download + run)
 exec < /dev/tty
@@ -22,7 +22,7 @@ WHITE='\033[1;37m'
 NC='\033[0m'
 
 # Global variables
-GITHUB_REPO="persiansmallcoder/dnstt-fast"
+GITHUB_REPO="mohjaf67/dnstt-fast-tunnel"
 GITHUB_RAW="https://raw.githubusercontent.com/$GITHUB_REPO/main"
 GITHUB_RELEASES="https://github.com/$GITHUB_REPO/releases"
 SCRIPT_URL="$GITHUB_RAW/dnstt-deploy.sh"
