@@ -66,3 +66,26 @@ Settings are persisted automatically. The app remembers:
 - Domain
 - Public key
 - Number of tunnels
+
+## Rebuilding Native Libraries (Optional)
+
+The pre-built `libhev-socks5-tunnel.so` files are included in `app/src/main/jniLibs/`. If you need to rebuild them (e.g., to update or modify the tun2socks library):
+
+1. Initialize the submodule:
+
+```bash
+git submodule update --init --recursive
+```
+
+2. Build with NDK:
+
+```bash
+cd app/src/main/jni
+ndk-build
+```
+
+3. Copy the built `.so` files to `jniLibs/`:
+
+```bash
+cp -r ../libs/* ../jniLibs/
+```
