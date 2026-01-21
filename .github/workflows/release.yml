@@ -68,15 +68,48 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleRelease --no-daemon
 
+      - name: Sign APKs
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          # Decode keystore from base64
+          echo "$KEYSTORE_BASE64" | base64 -d > keystore.jks
+
+          # Sign each APK
+          for apk in android-app/app/build/outputs/apk/release/*-unsigned.apk; do
+            signed_apk="${apk/-unsigned/}"
+
+            # Align the APK first
+            ${ANDROID_HOME}/build-tools/34.0.0/zipalign -v -p 4 "$apk" "${apk}.aligned"
+
+            # Sign the APK
+            ${ANDROID_HOME}/build-tools/34.0.0/apksigner sign \
+              --ks keystore.jks \
+              --ks-pass pass:"$KEYSTORE_PASSWORD" \
+              --ks-key-alias "$KEY_ALIAS" \
+              --key-pass pass:"$KEY_PASSWORD" \
+              --out "$signed_apk" \
+              "${apk}.aligned"
+
+            # Verify signature
+            ${ANDROID_HOME}/build-tools/34.0.0/apksigner verify "$signed_apk"
+          done
+
+          # Clean up
+          rm keystore.jks
+
       - name: Prepare APKs for release
         run: |
-          # Copy architecture-specific APKs (smaller size)
-          cp android-app/app/build/outputs/apk/release/app-arm64-v8a-release-unsigned.apk dnstt-client-android-arm64.apk
-          cp android-app/app/build/outputs/apk/release/app-armeabi-v7a-release-unsigned.apk dnstt-client-android-arm.apk
-          cp android-app/app/build/outputs/apk/release/app-x86_64-release-unsigned.apk dnstt-client-android-x86_64.apk
-          cp android-app/app/build/outputs/apk/release/app-x86-release-unsigned.apk dnstt-client-android-x86.apk
+          # Copy signed architecture-specific APKs (smaller size)
+          cp android-app/app/build/outputs/apk/release/app-arm64-v8a-release.apk dnstt-client-android-arm64.apk
+          cp android-app/app/build/outputs/apk/release/app-armeabi-v7a-release.apk dnstt-client-android-arm.apk
+          cp android-app/app/build/outputs/apk/release/app-x86_64-release.apk dnstt-client-android-x86_64.apk
+          cp android-app/app/build/outputs/apk/release/app-x86-release.apk dnstt-client-android-x86.apk
           # Also include universal for convenience
-          cp android-app/app/build/outputs/apk/release/app-universal-release-unsigned.apk dnstt-client-android-universal.apk
+          cp android-app/app/build/outputs/apk/release/app-universal-release.apk dnstt-client-android-universal.apk
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
