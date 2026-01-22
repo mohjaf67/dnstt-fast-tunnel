@@ -10,8 +10,8 @@ android {
         applicationId "com.dnstt.client"
         minSdk 24
         targetSdk 34
-        versionCode 2
-        versionName "1.1.0"
+        versionCode 4
+        versionName "1.3.0"
     }
 
     buildTypes {
@@ -46,8 +46,8 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 
     sourceSets {
@@ -61,5 +61,10 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.11.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'androidx.viewpager2:viewpager2:1.0.0'
+    implementation 'com.google.code.gson:gson:2.10.1'
     implementation fileTree(dir: 'libs', include: ['*.aar'])
+
+    // dnsjava for fast native DNS resolver testing
+    implementation 'dnsjava:dnsjava:3.5.3'
 }
