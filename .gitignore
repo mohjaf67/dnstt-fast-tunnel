@@ -19,3 +19,5 @@ server.pub
 android-app/app/build/
 android-app/.gradle/
 *.apk
+.DS_Store
+.claude/
