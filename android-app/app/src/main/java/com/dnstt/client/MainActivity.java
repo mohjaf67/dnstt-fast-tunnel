@@ -239,7 +239,7 @@ public class MainActivity extends AppCompatActivity implements StatusCallback {
 
     private boolean hasValidSettings() {
         String pubkeyStr = getText(pubkey);
-        String domainStr = getText(domain);
+        String domainStr = getDomain();
         return pubkeyStr != null && !pubkeyStr.isEmpty() &&
                domainStr != null && !domainStr.isEmpty();
     }
@@ -708,7 +708,7 @@ public class MainActivity extends AppCompatActivity implements StatusCallback {
         setInputsEnabled(false);
 
         String type = transportType.getText().toString();
-        String dom = getText(domain);
+        String dom = getDomain();
         int numTunnels = 8;
         try {
             numTunnels = Integer.parseInt(getText(tunnels));
@@ -1129,7 +1129,7 @@ public class MainActivity extends AppCompatActivity implements StatusCallback {
                 return;
             }
 
-            String dom = getText(domain);
+            String dom = getDomain();
             int numTunnels = 8;
             try {
                 numTunnels = Integer.parseInt(getText(tunnels));
@@ -1157,7 +1157,7 @@ public class MainActivity extends AppCompatActivity implements StatusCallback {
 
         // Wait for disconnect to complete, then search for new DNS
         handler.postDelayed(() -> {
-            String dom = getText(domain);
+            String dom = getDomain();
             int numTunnels = 8;
             try {
                 numTunnels = Integer.parseInt(getText(tunnels));
@@ -1227,7 +1227,7 @@ public class MainActivity extends AppCompatActivity implements StatusCallback {
         intent.setAction(DnsttVpnService.ACTION_START);
         intent.putExtra(DnsttVpnService.EXTRA_TRANSPORT_TYPE, transportType.getText().toString().toLowerCase());
         intent.putExtra(DnsttVpnService.EXTRA_TRANSPORT_ADDR, getText(transportAddr));
-        intent.putExtra(DnsttVpnService.EXTRA_DOMAIN, getText(domain));
+        intent.putExtra(DnsttVpnService.EXTRA_DOMAIN, getDomain());
         intent.putExtra(DnsttVpnService.EXTRA_PUBKEY, getText(pubkey));
 
         try {
@@ -1255,7 +1255,7 @@ public class MainActivity extends AppCompatActivity implements StatusCallback {
         String type = transportType.getText().toString().toLowerCase();
         config.setTransportType(type);
         config.setTransportAddr(getText(transportAddr));
-        config.setDomain(getText(domain));
+        config.setDomain(getDomain());
         config.setPubkeyHex(getText(pubkey));
         config.setListenAddr("127.0.0.1:1080");
 
@@ -1372,6 +1372,21 @@ public class MainActivity extends AppCompatActivity implements StatusCallback {
         }
         CharSequence text = editText.getText();
         return text != null ? text.toString().trim() : "";
+    }
+
+    private String getDomain() {
+        String dom = getText(domain);
+        // Remove http:// or https:// prefix if present
+        if (dom.startsWith("https://")) {
+            dom = dom.substring(8);
+        } else if (dom.startsWith("http://")) {
+            dom = dom.substring(7);
+        }
+        // Remove trailing slash
+        if (dom.endsWith("/")) {
+            dom = dom.substring(0, dom.length() - 1);
+        }
+        return dom;
     }
 
     private void setInputsEnabled(boolean enabled) {
@@ -1706,7 +1721,7 @@ public class MainActivity extends AppCompatActivity implements StatusCallback {
                 .putString("transportType", transportType.getText().toString())
                 .putString("dohProvider", dohProvider.getText().toString())
                 .putString("transportAddr", getText(transportAddr))
-                .putString("domain", getText(domain))
+                .putString("domain", getDomain())
                 .putString("pubkey", getText(pubkey))
                 .putString("tunnels", getText(tunnels))
                 .putBoolean("vpnMode", vpnMode)
