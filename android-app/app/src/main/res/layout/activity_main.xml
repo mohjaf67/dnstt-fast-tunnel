@@ -123,6 +123,16 @@
                     android:layout_marginTop="20dp"
                     android:text="@string/connect" />
 
+                <!-- Retry Button (shown only when connected) -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/retryButton"
+                    style="@style/Widget.App.Button.Outline"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="It doesn't work"
+                    android:visibility="gone" />
+
                 <!-- Quick Options -->
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -224,6 +234,203 @@
                             android:checked="true"
                             app:thumbTint="@color/switch_thumb_selector"
                             app:trackTint="@color/switch_track_selector" />
+
+                    </LinearLayout>
+
+                    <!-- Advanced Settings Toggle -->
+                    <LinearLayout
+                        android:id="@+id/advancedToggle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:paddingVertical="12dp"
+                        android:layout_marginTop="8dp"
+                        android:background="?attr/selectableItemBackground">
+
+                        <ImageView
+                            android:id="@+id/advancedArrow"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_expand_more"
+                            app:tint="@color/text_secondary"
+                            android:layout_marginEnd="8dp" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Advanced Settings"
+                            android:textSize="14sp"
+                            android:textColor="@color/text_secondary" />
+
+                    </LinearLayout>
+
+                    <!-- Advanced Settings Content (hidden by default) -->
+                    <LinearLayout
+                        android:id="@+id/advancedContent"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:visibility="gone"
+                        android:paddingStart="28dp">
+
+                        <!-- DNS Dig Concurrency Setting (Phase 1) -->
+                        <LinearLayout
+                            android:id="@+id/dnsDigConcurrencyLayout"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginTop="8dp">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="DNS Dig Concurrency"
+                                android:textSize="14sp"
+                                android:textColor="@color/text_secondary" />
+
+                            <com.google.android.material.textfield.TextInputLayout
+                                style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox.Dense"
+                                android:layout_width="80dp"
+                                android:layout_height="wrap_content"
+                                android:hint="10-200"
+                                app:boxBackgroundColor="@color/background_surface">
+
+                                <com.google.android.material.textfield.TextInputEditText
+                                    android:id="@+id/dnsDigConcurrencyInput"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:inputType="number"
+                                    android:text="50"
+                                    android:textSize="14sp"
+                                    android:textColor="@color/text_primary" />
+                            </com.google.android.material.textfield.TextInputLayout>
+                        </LinearLayout>
+
+                        <!-- DNS Tunnel Concurrency Setting (Phase 2) -->
+                        <LinearLayout
+                            android:id="@+id/dnsTunnelConcurrencyLayout"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginTop="8dp">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="DNS Tunnel Concurrency"
+                                android:textSize="14sp"
+                                android:textColor="@color/text_secondary" />
+
+                            <com.google.android.material.textfield.TextInputLayout
+                                style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox.Dense"
+                                android:layout_width="80dp"
+                                android:layout_height="wrap_content"
+                                android:hint="1-20"
+                                app:boxBackgroundColor="@color/background_surface">
+
+                                <com.google.android.material.textfield.TextInputEditText
+                                    android:id="@+id/dnsTunnelConcurrencyInput"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:inputType="number"
+                                    android:text="10"
+                                    android:textSize="14sp"
+                                    android:textColor="@color/text_primary" />
+                            </com.google.android.material.textfield.TextInputLayout>
+                        </LinearLayout>
+
+                        <!-- DNS Timeout Setting -->
+                        <LinearLayout
+                            android:id="@+id/dnsTimeoutLayout"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginTop="8dp">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="DNS Timeout (ms)"
+                                android:textSize="14sp"
+                                android:textColor="@color/text_secondary" />
+
+                            <com.google.android.material.textfield.TextInputLayout
+                                style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox.Dense"
+                                android:layout_width="100dp"
+                                android:layout_height="wrap_content"
+                                android:hint="500-10000"
+                                app:boxBackgroundColor="@color/background_surface">
+
+                                <com.google.android.material.textfield.TextInputEditText
+                                    android:id="@+id/dnsTimeoutInput"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:inputType="number"
+                                    android:text="3000"
+                                    android:textSize="14sp"
+                                    android:textColor="@color/text_primary" />
+                            </com.google.android.material.textfield.TextInputLayout>
+                        </LinearLayout>
+
+                        <!-- DNS Source Dropdown -->
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/dnsSourceLayout"
+                            style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox.ExposedDropdownMenu"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:hint="DNS Source"
+                            app:boxBackgroundColor="@color/background_surface"
+                            app:startIconDrawable="@drawable/ic_dns"
+                            app:startIconTint="@color/accent">
+
+                            <AutoCompleteTextView
+                                android:id="@+id/dnsSourceDropdown"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:inputType="none"
+                                android:textSize="14sp"
+                                android:textColor="@color/text_primary" />
+
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <!-- Configure DNS Button -->
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnConfigureDns"
+                            style="@style/Widget.MaterialComponents.Button.TextButton"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="Configure DNS Servers"
+                            android:textSize="14sp"
+                            android:textColor="@color/primary"
+                            app:icon="@drawable/ic_dns"
+                            app:iconGravity="textStart"
+                            app:iconSize="20dp"
+                            app:iconTint="@color/primary" />
+
+                        <!-- Clear DNS Cache Button -->
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnClearDnsCache"
+                            style="@style/Widget.MaterialComponents.Button.TextButton"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="Clear DNS Cache"
+                            android:textSize="14sp"
+                            android:textColor="@color/text_secondary"
+                            app:icon="@drawable/ic_refresh"
+                            app:iconGravity="textStart"
+                            app:iconSize="20dp"
+                            app:iconTint="@color/text_secondary" />
 
                     </LinearLayout>
 
@@ -629,11 +836,15 @@
                 android:padding="20dp">
 
                 <LinearLayout
+                    android:id="@+id/logHeader"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:layout_marginBottom="12dp">
+                    android:layout_marginBottom="12dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:background="?attr/selectableItemBackground">
 
                     <ImageView
                         android:layout_width="20dp"
@@ -643,18 +854,32 @@
                         android:layout_marginEnd="8dp" />
 
                     <TextView
-                        android:layout_width="wrap_content"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
                         android:layout_height="wrap_content"
                         android:text="Log"
                         android:textSize="16sp"
                         android:textStyle="bold"
                         android:textColor="@color/text_primary" />
 
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnViewAllLogs"
+                        style="@style/Widget.MaterialComponents.Button.TextButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="36dp"
+                        android:text="View All"
+                        android:textSize="12sp"
+                        android:minWidth="0dp"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp"
+                        android:textColor="@color/primary" />
+
                 </LinearLayout>
 
                 <ScrollView
+                    android:id="@+id/logScrollView"
                     android:layout_width="match_parent"
-                    android:layout_height="180dp"
+                    android:layout_height="150dp"
                     android:background="@drawable/log_background"
                     android:padding="12dp">
 

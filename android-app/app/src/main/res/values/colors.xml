@@ -13,6 +13,7 @@
     <color name="background_dark">#FF121212</color>
     <color name="background_card">#FF1E1E1E</color>
     <color name="background_surface">#FF2D2D2D</color>
+    <color name="card_stroke">#33FFFFFF</color>
 
     <!-- Text colors -->
     <color name="text_primary">#FFFFFFFF</color>
