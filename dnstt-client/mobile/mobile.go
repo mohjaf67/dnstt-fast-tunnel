@@ -734,6 +734,327 @@ func (c *Client) StartWithBestResolver(cfg *Config, resolvers string, callback R
 	return c.Start(cfg)
 }
 
+// =============================================================================
+// Two-Phase Resolver Testing API (Fast)
+// =============================================================================
+
+// TwoPhaseCallback is called during two-phase resolver testing.
+type TwoPhaseCallback interface {
+	OnPhaseChange(phase int, message string)
+	OnProgress(phase int, tested int, total int, currentResolver string)
+	OnPhaseComplete(phase int, passedCount int, totalTested int)
+	OnResolverFound(resolver string, latencyMs int64)
+}
+
+// TwoPhaseConfig holds configuration for two-phase resolver testing.
+type TwoPhaseConfig struct {
+	phase1Concurrency int   // Number of concurrent DNS tests (default: 500)
+	phase1TimeoutMs   int64 // Timeout for each DNS test in ms (default: 2000)
+	phase2Concurrency int   // Number of concurrent tunnel tests (default: 30)
+	phase2TimeoutMs   int64 // Timeout for each tunnel test in ms (default: 5000)
+	phase2MaxToTest   int   // Max resolvers to test in phase 2 (default: 30)
+	maxLatencyMs      int64 // Max acceptable latency from phase 1 (default: 500)
+}
+
+// NewTwoPhaseConfig creates a default two-phase configuration.
+func NewTwoPhaseConfig() *TwoPhaseConfig {
+	return &TwoPhaseConfig{
+		phase1Concurrency: 100, // Balanced for stability and speed
+		phase1TimeoutMs:   2000,
+		phase2Concurrency: 20,
+		phase2TimeoutMs:   5000,
+		phase2MaxToTest:   30,
+		maxLatencyMs:      500,
+	}
+}
+
+// Setter methods for gomobile compatibility
+func (c *TwoPhaseConfig) SetPhase1Concurrency(v int)   { c.phase1Concurrency = v }
+func (c *TwoPhaseConfig) SetPhase1TimeoutMs(v int64)   { c.phase1TimeoutMs = v }
+func (c *TwoPhaseConfig) SetPhase2Concurrency(v int)   { c.phase2Concurrency = v }
+func (c *TwoPhaseConfig) SetPhase2TimeoutMs(v int64)   { c.phase2TimeoutMs = v }
+func (c *TwoPhaseConfig) SetPhase2MaxToTest(v int)     { c.phase2MaxToTest = v }
+func (c *TwoPhaseConfig) SetMaxLatencyMs(v int64)      { c.maxLatencyMs = v }
+
+// FindWorkingResolverTwoPhase tests resolvers using a fast two-phase approach:
+// Phase 1: Fast parallel DNS-only scan (high concurrency, short timeout)
+// Phase 2: Tunnel verification on top N fastest resolvers (parallel, early termination)
+// Returns the first working resolver address, or empty string if none work.
+func FindWorkingResolverTwoPhase(resolvers string, domain string, pubkeyHex string, config *TwoPhaseConfig, callback TwoPhaseCallback) string {
+	// Use defaults if config is nil
+	if config == nil {
+		config = NewTwoPhaseConfig()
+	}
+
+	// Parse resolvers from newline-separated string
+	lines := strings.Split(resolvers, "\n")
+	var resolverList []string
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if line != "" && !strings.HasPrefix(line, "#") {
+			resolverList = append(resolverList, line)
+		}
+	}
+
+	if len(resolverList) == 0 {
+		log.Printf("no resolvers provided")
+		return ""
+	}
+
+	// Parse domain
+	domainName, err := dnstt.ParseDomain(domain)
+	if err != nil {
+		log.Printf("invalid domain: %v", err)
+		return ""
+	}
+
+	// Parse pubkey
+	pubkey, err := noise.DecodeKey(pubkeyHex)
+	if err != nil {
+		log.Printf("invalid pubkey: %v", err)
+		return ""
+	}
+
+	total := len(resolverList)
+	log.Printf("two-phase testing %d resolvers...", total)
+
+	// =========================================================================
+	// PHASE 1: Fast parallel DNS-only scan
+	// =========================================================================
+	if callback != nil {
+		callback.OnPhaseChange(1, fmt.Sprintf("Phase 1: Testing %d DNS resolvers...", total))
+	}
+
+	phase1Timeout := time.Duration(config.phase1TimeoutMs) * time.Millisecond
+	if phase1Timeout < 500*time.Millisecond {
+		phase1Timeout = 2000 * time.Millisecond
+	}
+
+	phase1Concurrency := config.phase1Concurrency
+	if phase1Concurrency < 1 {
+		phase1Concurrency = 500
+	}
+
+	// Test DNS resolvers using worker pool pattern (avoids spawning thousands of goroutines)
+	type dnsResult struct {
+		resolver  string
+		latencyMs int64
+		success   bool
+	}
+
+	workChan := make(chan string, total)
+	resultChan := make(chan dnsResult, total)
+	var tested int64
+
+	// Start worker pool - fixed number of goroutines
+	var wg sync.WaitGroup
+	for i := 0; i < phase1Concurrency; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for res := range workChan {
+				// DNS-only test
+				result := dnstt.TestDNSResolver(res, domainName, phase1Timeout)
+
+				done := atomic.AddInt64(&tested, 1)
+				if callback != nil {
+					callback.OnProgress(1, int(done), total, res)
+				}
+
+				resultChan <- dnsResult{
+					resolver:  res,
+					latencyMs: result.Latency.Milliseconds(),
+					success:   result.Success,
+				}
+			}
+		}()
+	}
+
+	// Feed work to workers
+	go func() {
+		for _, resolver := range resolverList {
+			workChan <- resolver
+		}
+		close(workChan)
+	}()
+
+	// Close results when all workers done
+	go func() {
+		wg.Wait()
+		close(resultChan)
+	}()
+
+	// Collect phase 1 results
+	var phase1Results []dnsResult
+	for r := range resultChan {
+		if r.success {
+			phase1Results = append(phase1Results, r)
+		}
+	}
+
+	// Sort by latency (fastest first)
+	sort.Slice(phase1Results, func(i, j int) bool {
+		return phase1Results[i].latencyMs < phase1Results[j].latencyMs
+	})
+
+	phase1Passed := len(phase1Results)
+	log.Printf("phase 1 complete: %d/%d resolvers passed DNS test", phase1Passed, total)
+
+	if callback != nil {
+		callback.OnPhaseComplete(1, phase1Passed, total)
+	}
+
+	if phase1Passed == 0 {
+		log.Printf("no resolvers passed phase 1")
+		return ""
+	}
+
+	// =========================================================================
+	// PHASE 2: Tunnel verification on top N fastest resolvers
+	// =========================================================================
+	phase2MaxToTest := config.phase2MaxToTest
+	if phase2MaxToTest < 1 {
+		phase2MaxToTest = 30
+	}
+
+	// Filter by max latency and limit to top N
+	var phase2Candidates []dnsResult
+	for _, r := range phase1Results {
+		if r.latencyMs <= config.maxLatencyMs || len(phase2Candidates) == 0 {
+			phase2Candidates = append(phase2Candidates, r)
+			if len(phase2Candidates) >= phase2MaxToTest {
+				break
+			}
+		}
+	}
+
+	// If no candidates within latency limit, take the fastest ones anyway
+	if len(phase2Candidates) == 0 && len(phase1Results) > 0 {
+		for i := 0; i < phase2MaxToTest && i < len(phase1Results); i++ {
+			phase2Candidates = append(phase2Candidates, phase1Results[i])
+		}
+	}
+
+	phase2Total := len(phase2Candidates)
+	log.Printf("phase 2: testing %d fastest resolvers for tunnel connectivity...", phase2Total)
+
+	if callback != nil {
+		callback.OnPhaseChange(2, fmt.Sprintf("Phase 2: Verifying %d fastest resolvers...", phase2Total))
+	}
+
+	phase2Timeout := time.Duration(config.phase2TimeoutMs) * time.Millisecond
+	if phase2Timeout < 2*time.Second {
+		phase2Timeout = 5 * time.Second
+	}
+
+	phase2Concurrency := config.phase2Concurrency
+	if phase2Concurrency < 1 {
+		phase2Concurrency = 30
+	}
+
+	// Test tunnel connections using worker pool with early termination
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	type tunnelWork struct {
+		resolver  string
+		latencyMs int64
+	}
+
+	workChan2 := make(chan tunnelWork, phase2Total)
+	foundChan := make(chan string, 1)
+	var phase2Tested int64
+	var phase2Passed int64
+
+	// Start worker pool for phase 2
+	var wg2 sync.WaitGroup
+	for i := 0; i < phase2Concurrency; i++ {
+		wg2.Add(1)
+		go func() {
+			defer wg2.Done()
+			for {
+				select {
+				case <-ctx.Done():
+					return
+				case work, ok := <-workChan2:
+					if !ok {
+						return
+					}
+
+					// Ensure resolver has port
+					resolverWithPort := work.resolver
+					if !strings.Contains(work.resolver, ":") {
+						resolverWithPort = work.resolver + ":53"
+					}
+
+					done := atomic.AddInt64(&phase2Tested, 1)
+					if callback != nil {
+						callback.OnProgress(2, int(done), phase2Total, work.resolver)
+					}
+
+					// Test tunnel connection
+					err := dnstt.TestTunnelConnection(resolverWithPort, domain, pubkey, nil, phase2Timeout)
+					if err != nil {
+						log.Printf("tunnel test failed for %s: %v", work.resolver, err)
+						continue
+					}
+
+					// Success!
+					atomic.AddInt64(&phase2Passed, 1)
+					log.Printf("FOUND working resolver: %s (latency: %dms)", resolverWithPort, work.latencyMs)
+
+					select {
+					case foundChan <- resolverWithPort:
+						cancel() // Cancel all other tests
+						if callback != nil {
+							callback.OnResolverFound(resolverWithPort, work.latencyMs)
+						}
+					default:
+						// Another goroutine already found one
+					}
+					return // Exit worker after finding
+				}
+			}
+		}()
+	}
+
+	// Feed work to workers
+	go func() {
+		for _, candidate := range phase2Candidates {
+			select {
+			case <-ctx.Done():
+				break
+			case workChan2 <- tunnelWork{resolver: candidate.resolver, latencyMs: candidate.latencyMs}:
+			}
+		}
+		close(workChan2)
+	}()
+
+	// Wait for workers to finish
+	go func() {
+		wg2.Wait()
+		close(foundChan)
+	}()
+
+	var result string
+	for r := range foundChan {
+		if r != "" {
+			result = r
+			break
+		}
+	}
+
+	if callback != nil {
+		callback.OnPhaseComplete(2, int(atomic.LoadInt64(&phase2Passed)), phase2Total)
+	}
+
+	if result == "" {
+		log.Printf("no working resolver found after two-phase testing")
+	}
+
+	return result
+}
+
 // FindFirstWorkingResolver tests resolvers sequentially (one at a time) and returns
 // the first one that works. This is fast because it stops as soon as it finds a working one.
 // Much lighter weight than testing all resolvers in parallel.

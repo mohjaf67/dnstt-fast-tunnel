@@ -577,6 +577,7 @@ func recvLoop(domain dns.Name, dnsConn net.PacketConn, ttConn *turbotunnel.Queue
 // fit while keeping the total size under maxEncodedPayload, then sends it.
 func sendLoop(dnsConn net.PacketConn, ttConn *turbotunnel.QueuePacketConn, ch <-chan *record, maxEncodedPayload int) error {
 	var nextRec *record
+	var logCounter uint64
 	for {
 		rec := nextRec
 		nextRec = nil
@@ -586,6 +587,14 @@ func sendLoop(dnsConn net.PacketConn, ttConn *turbotunnel.QueuePacketConn, ch <-
 			rec, ok = <-ch
 			if !ok {
 				break
+			}
+			// Log channel backlog every 1000 iterations
+			logCounter++
+			if logCounter%1000 == 0 {
+				chLen := len(ch)
+				if chLen > 100 {
+					log.Printf("sendLoop backlog: channel has %d pending records (capacity 4096)", chLen)
+				}
 			}
 		}
 
@@ -828,7 +837,7 @@ func run(privkey []byte, domain dns.Name, upstream string, dnsConn net.PacketCon
 		}
 	}()
 
-	ch := make(chan *record, 1024)
+	ch := make(chan *record, 4096)
 	defer close(ch)
 
 	// We could run multiple copies of sendLoop; that would allow more time
